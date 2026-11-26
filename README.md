@@ -27,6 +27,12 @@ dsh plugin --profile desktop add github:unifilitence/dsh-perf-guard
 dsh plugin --profile web add dsh-perf-guard
 ```
 
+### 界面预览（轻量驾驶舱 UI）
+
+| 概览与 2×2 场景预设 | 按需体检与前后 Δ 快照 |
+|---|---|
+| ![概览与预设](./docs/screenshots/cockpit-overview.png) | ![体检与快照](./docs/screenshots/cockpit-doctor.png) |
+
 ### 难决定怎么选？4 套一键预设对号入座
 
 装完进 **设置 → 性能护航**，不用纠结一堆参数，按你的日常习惯点一个按钮就行：
@@ -105,6 +111,17 @@ dsh plugin --profile desktop remove dsh-perf-guard
 - 已归档会话完整保留在 `$DSH_HOME/sessions-archive/`，绝不随卸载丢失；
 - 绝不修改 `app.asar`、`cordis.patch.yml`、`.credentials.yaml` 或其他插件数据；
 - 所有 Host Fetch 路由严格绑定 Cordis disposer，卸载干净。
+
+---
+
+## 🤖 AI 协作说明 / AI-Assisted Development
+
+本项目是一次完整的人机协作开源实践：
+- **人类作者**负责：发现真实卡顿痛点、定义产品定位与 4 套场景预设、把关安全红线与工程取舍（“做什么”与“刻意不做什么”）、以及真机验收。
+- **AI 协作者**：全程由 **Antigravity（Gemini 4 Neon）** 协作完成卡顿根因排查、隔离环境 A/B 压测、Host/Client 零依赖代码实现、单元测试编写、驾驶舱 UI 打磨与发布流程。
+- 所有核心功能均通过自动化单元测试（`npm test`）与隔离 DSH `0.2.2` 端到端实测验收，不靠“AI 盲写碰运气”。
+
+*This plugin was built collaboratively with **Antigravity (Gemini 4 Neon)** — human-directed on problem framing, UX presets, safety boundaries, and live verification; AI-assisted on root-cause profiling, isolated A/B benchmarking, zero-dependency implementation, and test coverage.*
 
 ---
 
