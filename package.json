@@ -1,0 +1,65 @@
+{
+  "name": "dsh-perf-guard",
+  "version": "0.2.0",
+  "description": "Zero-polling performance guard, on-demand storage doctor, reversible session cold-archiver, and configurable transcript slimming for DeepSeek Harness (DSH).",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/",
+    "cordis.patch.yml",
+    "icon.svg",
+    "market/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20",
+    "dsh": ">=0.2.0-rc.1 <0.3.0-0"
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-api-session-controller"
+      ]
+    }
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "performance",
+    "archive",
+    "lag",
+    "doctor"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unifilitence/dsh-perf-guard.git"
+  },
+  "homepage": "https://github.com/unifilitence/dsh-perf-guard#readme",
+  "bugs": {
+    "url": "https://github.com/unifilitence/dsh-perf-guard/issues"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.5"
+  }
+}

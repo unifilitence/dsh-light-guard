@@ -1,0 +1,31 @@
+# ---- 临时文件（防误提交，必带）----
+.tmp*
+_tmp*
+*.tmp
+~$*
+
+# ---- 本地私有工作区文档（不推公开仓库）----
+AGENTS.md
+交接备忘-*.md
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# ---- Node ----
+node_modules/
+
+# ---- 构建产物 ----
+build/
+dist/
+*.log
+
+# ---- 系统与编辑器 ----
+Thumbs.db
+Desktop.ini
+.DS_Store
+.idea/
+.vscode/
