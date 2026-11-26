@@ -1,6 +1,11 @@
 {
   "name": "dsh-perf-guard",
   "version": "0.2.0",
+  "author": "unifilitence",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
   "description": "Zero-polling performance guard, on-demand storage doctor, reversible session cold-archiver, and configurable transcript slimming for DeepSeek Harness (DSH).",
   "type": "module",
   "main": "lib/index.js",

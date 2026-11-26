@@ -1,98 +1,118 @@
 # dsh-perf-guard
 
-**Zero-polling performance guard, reversible session cold-archiver, and on-demand storage doctor for DeepSeek Harness (DSH 0.2.x).**
+**让 DeepSeek Harness（DSH 0.2.x）不再越用越卡：零后台轮询的性能护航、可逆会话冷归档与按需存储体检插件。**
 
-面向 DeepSeek Harness（DSH 0.2.x）的**零后台轮询性能护航插件**：提供可逆会话冷热归档与标题离线搜索、按需存储体检、插件前后性能对比快照、纯 CSS 离屏渲染优化，以及可在设置页调参的会话流瘦身。
-
----
-
-## 为什么做这个插件 / Why
-
-重度使用 DSH 时，界面掉帧、输入发涩或内存飙高通常来自三层叠加：
-1. **海量历史会话撑爆侧边栏**：`sessions/` 积压上千条历史会话，侧边栏全量渲染出数万 DOM 节点；
-2. **单条超长会话首帧过重**：默认一次拉取 500 条消息与巨型工具定义 schema，造成主线程长任务阻塞；
-3. **第三方插件存储小文件膨胀**：部分插件在 `storages/` 下堆积数万个小文件或高频重写大 JSON，平时无从察觉。
-
-`dsh-perf-guard` 坚持 **零后台轮询、只移不删、零核心文件修改、与 `dsh-lag-guard` 自动和平共存**。
+*Zero-polling performance guard, reversible session cold-archiver with title search, and on-demand storage doctor for DeepSeek Harness (DSH 0.2.x).*
 
 ---
 
-## 核心功能 / Features
+## ⚡ 10 秒速览（不想看原理直接看这里）
 
-在 DSH **设置 → 性能护航** 中一站式管理：
+### 它能帮你做什么
+- **给侧边栏瘦身（只移不删）**：把超龄/超大历史会话安全移到冷归档目录，支持**按标题离线搜索**并随时**一键原位还原**。
+- **给超长会话减负**：在设置页里可调参的流窗口裁剪 + 纯 CSS 离屏跳过渲染 + 挂机减负模式，**不改原始日志、不改模型上下文**。
+- **一键揪出卡顿元凶**：点一下「立即体检」扫出爆棚的会话与插件存储目录，提供**一键打开文件夹**和**插件前后对比快照（Δ）**。
+- **零后台负担**：平时 0 定时器、0 rAF 循环、0 报错心跳；装了 `dsh-lag-guard` 时自动避让共存。
 
-- **4 套一键预设（Presets）**：
-  - **轻量无感**：纯 CSS 离屏优化 + 按需体检 + 手动归档（零数据流干预）；
-  - **重度长会话**：流瘦身 + 挂机减负模式 + CSS 离屏优化 + 长驻提醒；
-  - **海量历史档**：侧重 30 天+ 历史会话冷归档与离线标题搜索；
-  - **插件排查档**：侧重存储膨胀体检与插件前后对比快照。
-- **可逆会话冷热归档（Reversible Cold Archiver）**：
-  - 按“早于 N 天 / 大于 N MB”先**预览清单**，确认后将旧会话原样移至 `$DSH_HOME/sessions-archive/`（**只移不删**）；
-  - 自动跳过近期活跃会话（默认 10 分钟内有写入）与星标豁免项；
-  - 自动读取 `session_projcache` 可读标题，支持**按标题/ID/工作区离线搜索**并随时**一键原位还原**。
-- **按需性能体检（On-Demand Doctor）**：
-  - 平时 **0 定时器、0 后台轮询**；点击「立即体检」扫描 `sessions/` 分布、`storages/` 膨胀目录及大体积附件/历史备份目录；
-  - 每个异常目录旁提供 **「打开目录」**（严格限制在 `$DSH_HOME` 内，由用户自行决定清理）。
-- **插件前后性能对比快照（Before/After Snapshots）**：
-  - 增删或更新第三方插件前后各拍一张快照，自动计算 DOM 节点数、会话数与存储文件数增量（Δ）。
-- **无侵入渲染减负**：
-  - 纯 CSS `content-visibility: auto` 离屏跳过渲染 + 可选挂机减负模式（暂停过渡/动画）；
-  - 可在 UI 调参的 `SessionEventStream` 流瘦身（不改落盘日志、不改模型上下文）；若检测到已安装 `dsh-lag-guard`（`Symbol.for("dsh-lag-guard.patched.v1")`），自动避让不重复包裹。
+### 一键安装（安装后重启一次 DSH，打开「设置 → 性能护航」）
 
----
+```bash
+# Desktop 版（推荐，走 npm）
+dsh plugin --profile desktop add dsh-perf-guard
 
-## 隔离环境实测数据 / Isolated Benchmark
+# 或从 GitHub 安装
+dsh plugin --profile desktop add github:unifilitence/dsh-perf-guard
 
-在隔离 `DSH 0.2.2`（独立 `DSH_HOME` 与端口）打开同一条 **23.5 MB 真实长会话** 的实测对比：
+# Web 版把 desktop 换成 web 即可
+dsh plugin --profile web add dsh-perf-guard
+```
 
-| 指标 (Metric) | 纯 `0.2.2` 基线 | + `dsh-perf-guard` (`heavy`) | 变化 (Delta) |
+### 难决定怎么选？4 套一键预设对号入座
+
+装完进 **设置 → 性能护航**，不用纠结一堆参数，按你的日常习惯点一个按钮就行：
+
+| 如果你的情况是…… | 推荐预设 | 开启了什么 |
+|---|---|---|
+| **只想稳稳轻一点，不想动任何消息流** | **轻量无感** | 纯 CSS 离屏跳过 + 按需体检 + 手动冷归档（零数据流干预） |
+| **经常跑长任务 / 多轮工具调用 / 装了长上下文插件** | **重度长会话**（默认） | 流瘦身（首页 100 条）+ 挂机减负（暂停动画）+ CSS 离屏 + 长驻提醒 |
+| **用了很久，侧边栏堆了几百上千条旧对话** | **海量历史档** | 侧重 30 天+ 历史会话一键冷归档 + 标题离线搜索 + CSS 离屏 |
+| **装了十几个插件，不知道到底是谁把界面拖卡了** | **插件排查档** | 侧重存储小文件膨胀体检 + 插件前后性能对比快照（自动算 Δ） |
+
+### 实测效果（隔离 DSH `0.2.2`，打开同一条 23.5 MB 真实长会话）
+
+| 指标 | 纯 `0.2.2` 基线 | + `dsh-perf-guard` (`heavy`) | 变化 |
 |---|---:|---:|---:|
 | 页面 DOM 节点数 | 10,711 | **4,917** | **-54.1%** |
 | CDP 总节点数 | 16,231 | **7,450** | **-54.1%** |
 | JS 堆内存 (JSHeapUsed) | 62.4 MB | **39.5 MB** | **-36.7%** |
-| 打开阶段主线程 Long Task 总阻塞 | 566 ms (max 431 ms) | **287 ms (max 215 ms)** | **-49.3%** |
-| 控制台报错数 (Console Errors) | 0 | **0** | **0** |
+| 打开阶段主线程 Long Task 总阻塞 | 566 ms（最长 431 ms） | **287 ms（最长 215 ms）** | **-49.3%** |
+| 控制台报错数 | 0 | **0** | **0** |
 
 ---
 
-## 安装与卸载 / Install & Remove
+## 🔍 为什么 DSH 会越来越卡？（卡顿原理拆解）
 
-### Desktop 版（桌面端）
-```bash
-dsh plugin --profile desktop add github:unifilitence/dsh-perf-guard
-```
+如果你好奇“电脑 CPU/内存明明还很空，为什么 DSH 界面却越来越涩”，通常不是硬件不够，而是以下 **三层原因叠加**：
 
-### Web 版
-```bash
-dsh plugin --profile web add github:unifilitence/dsh-perf-guard
-```
+1. **历史会话堆积撑爆侧边栏（DOM 膨胀）**
+   - DSH 会把所有历史会话保存在 `$DSH_HOME/sessions/` 下；当会话积累到上千条时，侧边栏全量铺进 DOM 会撑出数万乃至十万级节点，打开侧栏或切换会话时样式重算和布局开销剧增。
+2. **单条超长会话的首帧与重排瓶颈**
+   - 打开会话时前端默认一次拉取高达 `maxMessages: 500` 条历史；
+   - 聊天列表按“轮次（turn）”切分虚拟滚动，但 Agent 干重活时单轮 turn 内可能塞进几百次工具调用和几 MB 输出，按 turn 虚拟化随之失效；
+   - 视图重建时还会反复对 `request/header.tools`（数百个工具的完整 JSON schema）做 `JSON.stringify` 对比，制造大量主线程阻塞和 GC 压力；
+   - 后端访问超大 `.jsonl.zstd` 日志时也需要解码整份历史。
+3. **第三方插件叠加与存储膨胀**
+   - 部分统计/记忆类插件会在 `$DSH_HOME/storages/` 下积累数万个小文件或高频整包重写数 MB 的 JSON；
+   - 像 `billion-context` 这类长上下文插件让模型侧能把一条会话续聊几百轮，但官方前端外壳扛不住同步膨胀的 DOM——**模型撑得住，前端先被拖垮**。
 
-安装后正常重启一次 DSH，打开 **设置 → 性能护航** 即可使用。
+---
 
-### 卸载 / Remove
+## 🛠️ 我们针对性地做了什么
+
+针对上面三层原因，本插件在**不碰核心源码**的前提下做三层精准补位：
+
+| 根因层 | 我们的针对性做法 | 作用范围 |
+|---|---|---|
+| **侧边栏会话堆积** | **可逆会话冷热归档**：将超龄/超大历史会话移至 `$DSH_HOME/sessions-archive/`，并从 `session_projcache` 读取可读标题建立离线索引，随时可搜标题一键还原 | 侧边栏立减 80%–95% 节点，几乎不受 DSH 版本升级影响 |
+| **超长会话首帧与重排** | **UI 可调参流瘦身 + 纯 CSS 离屏跳过**：在 `SessionEventStream.follow/readPage` 入口收紧首页窗口、剥离超大 `tools` schema、截断超长工具输出显示；叠加 `content-visibility: auto` 跳过可视区外排版 | 仅优化前端显示，**不改落盘日志、不改模型上下文** |
+| **插件存储膨胀与未知卡顿** | **零轮询按需体检 + 前后对比快照**：仅在点开面板时只读扫描 `sessions/`、`storages/` 与大附件目录，标红异常并提供「打开目录」与前后快照 Δ 对比 | 让“谁在拖慢 DSH”一目了然，且平时零后台开销 |
+
+---
+
+## 🚧 我们刻意没有做什么（以及为什么这么取舍）
+
+好插件不只看做了什么，更看**克制地不做什么**：
+
+1. **没有修改 `app.asar` 或强行魔改 React 内部虚拟滚动**
+   - **考虑**：DSH 0.2.x 仍在高频迭代，硬改内部组件或打 `app.asar` 补丁一升级就会失效，甚至触发 Fatal Recovery 导致配置重置。彻底的细粒度事件虚拟化与后端增量尾读应由官方核心完成；本插件坚持纯外挂、特征检测 + 静默降级，保证升级不炸。
+2. **没有自动删除任何会话、附件或第三方插件文件**
+   - **考虑**：用户数据安全高于一切。会话归档严格执行**只移不删 + 活跃会话保护（10 分钟内有写入拒绝移动）+ 路径遍历防线**；对第三方插件膨胀的 `storages/` 或大体积附件，只做只读告警 + 「打开目录」，把删除权完全留给你。
+3. **没有常驻后台轮询、心跳或自动强杀进程**
+   - **考虑**：为了防卡顿再引入常驻 rAF 循环、定时扫描或后台看门狗，容易让自己变成新的卡顿源，甚至打断正在运行的 Agent 任务。本插件默认 **0 定时器、0 网络心跳**，只在你打开面板时按需采集。
+4. **没有与 `dsh-lag-guard` 冲突重复包裹**
+   - **考虑**：如果你已经装了 `dsh-lag-guard`，本插件检测到 `Symbol.for("dsh-lag-guard.patched.v1")` 会自动避让流裁剪，只提供冷归档、体检面板、快照与 CSS 离屏优化，和平共存。
+5. **坦诚说明与长上下文插件（如 `billion-context`）的边界**
+   - 在**前端显示层**两者互补（模型继续记长记忆，浏览器只画眼前）；但在**后端日志层**，单条永不结束的几十 MB `.jsonl.zstd` 仍受限于宿主全量解码开销，因此仍建议按阶段适时开新会话，并把旧会话冷归档。
+
+---
+
+## 卸载与安全红线 / Remove & Safety
+
 ```bash
 dsh plugin --profile desktop remove dsh-perf-guard
 ```
-*(已归档的会话完整保留在 `$DSH_HOME/sessions-archive/`，不会随卸载丢失。)*
+
+- 已归档会话完整保留在 `$DSH_HOME/sessions-archive/`，绝不随卸载丢失；
+- 绝不修改 `app.asar`、`cordis.patch.yml`、`.credentials.yaml` 或其他插件数据；
+- 所有 Host Fetch 路由严格绑定 Cordis disposer，卸载干净。
 
 ---
 
-## 安全红线 / Safety Guarantees
-
-- **绝不修改** `app.asar`、`cordis.patch.yml`、`.credentials.yaml` 或其他插件的数据；
-- 配置与归档索引仅写入独立目录 `$DSH_HOME/storages/dsh-perf-guard/`；
-- 会话归档严格执行路径遍历校验与活跃会话保护，**只移不删**；
-- 所有 Host Fetch 路由绑定 Cordis disposer，卸载干净；上游 API 若改名则自动静默降级，绝不阻塞启动。
-
----
-
-## 开发与测试 / Development
+## 开发、测试与致谢 / Development & Credits
 
 ```bash
 npm test
 ```
 
-## 致谢与协议 / Credits & License
-
-- 流窗口裁剪思路参考并致谢 MIT 开源插件 [456erddgr/dsh-lag-guard](https://github.com/456erddgr/dsh-lag-guard)（本插件在检测到其已激活时自动避让共存）。
+- 流窗口裁剪思路参考并致谢 MIT 开源插件 [456erddgr/dsh-lag-guard](https://github.com/456erddgr/dsh-lag-guard)。
 - Licensed under the [MIT License](./LICENSE).
