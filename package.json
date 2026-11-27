@@ -1,6 +1,6 @@
 {
   "name": "dsh-light-guard",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "author": "unifilitence",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
