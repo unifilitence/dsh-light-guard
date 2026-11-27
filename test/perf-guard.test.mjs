@@ -108,10 +108,27 @@ test("archiver: path guard, active-session guard, reversible archive and restore
     assert.equal(preview.items[0].sessionId, "session-old-1");
     assert.equal(preview.skipped.active, 1);
 
-    // Execute archive (paired move of session dir + session_projcache json)
-    const archived = await runArchive(home, preview.items);
+    // Execute archive with fake official workspaceRegistry (detach on archive, re-attach on restore)
+    const wsSessions = ["session-old-1", "session-active-1"];
+    const officialArchived = [];
+    const fakeWs = {
+      id: "ws-main",
+      get sessionIds() { return wsSessions; },
+      async detachSession(id) { const i = wsSessions.indexOf(id); if (i >= 0) wsSessions.splice(i, 1); },
+      async attachSession(id) { if (!wsSessions.includes(id)) wsSessions.push(id); }
+    };
+    const fakeWsReg = {
+      list: () => [fakeWs],
+      get: (id) => (id === "ws-main" ? fakeWs : undefined),
+      get archivedSessionIds() { return officialArchived; },
+      async archiveSession(id) { if (!officialArchived.includes(id)) officialArchived.push(id); },
+      async unarchiveSession(id) { const i = officialArchived.indexOf(id); if (i >= 0) officialArchived.splice(i, 1); }
+    };
+
+    const archived = await runArchive(home, preview.items, { workspaceRegistry: fakeWsReg });
     assert.equal(archived.ok, true);
     assert.equal(archived.movedCount, 1);
+    assert.equal(wsSessions.includes("session-old-1"), false, "session must be detached from sidebar workspace on archive");
     await assert.rejects(() => stat(path.join(home, "sessions", "--WS--", "session-old-1")));
     await assert.rejects(() => stat(path.join(home, "storages", "session_projcache", "sessions", "session-old-1.json")));
     const stArch = await stat(path.join(home, "sessions-archive", "--WS--", "session-old-1"));
@@ -125,10 +142,11 @@ test("archiver: path guard, active-session guard, reversible archive and restore
     assert.equal(listed.entries[0].sessionId, "session-old-1");
     assert.equal(listed.entries[0].title, "旧项目排查对话");
 
-    // Restore back to sessions/ + projcache
-    const restored = await restoreArchive(home, [{ workspace: "--WS--", sessionId: "session-old-1" }]);
+    // Restore back to sessions/ + projcache + original workspace
+    const restored = await restoreArchive(home, [{ workspace: "--WS--", sessionId: "session-old-1" }], { workspaceRegistry: fakeWsReg });
     assert.equal(restored.ok, true);
     assert.equal(restored.restoredCount, 1);
+    assert.equal(wsSessions.includes("session-old-1"), true, "session must be re-attached to original workspace on restore");
     const stBack = await stat(path.join(home, "sessions", "--WS--", "session-old-1"));
     assert.equal(stBack.isDirectory(), true);
     const stProjBack = await stat(path.join(home, "storages", "session_projcache", "sessions", "session-old-1.json"));
