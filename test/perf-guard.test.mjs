@@ -188,6 +188,10 @@ test("host routes: registerRoutes binds and disposes all 10 endpoints cleanly", 
     const j2 = await r2.json();
     assert.equal(j2.ok, true);
     assert.equal(j2.report.sessions.totalCount, 2);
+    assert.equal(typeof j2.report.hostMemory.rssMB, "number");
+    assert.ok(j2.report.hostMemory.rssMB > 0);
+    assert.equal(typeof j2.report.hostMemory.heapUsedMB, "number");
+    assert.equal(typeof j2.report.hostMemory.uptimeHours, "number");
 
     // Negative path: open-folder rejects path traversal outside $DSH_HOME
     const openRoute = routes.get("/api/dsh-light-guard/open-folder");
