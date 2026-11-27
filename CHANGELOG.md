@@ -6,6 +6,14 @@
 
 ---
 
+## v0.7.2 (2026-11-27)
+- **发现的问题**：在 DSH 桌面端的 combo bundle 启动机制中，同一批次内任一插件如果在顶层注册或激活阶段同步抛错（例如重复执行触发 `duplicate factory registration`），会阻断同批排在后面的其他插件注册并引发 `web-boot` 致命弹窗。
+- **改了什么**：
+  - 为 `lib/client.js` 顶层 `window.__ModuleLoader__.load(...)` 增加双层守卫：`duplicate factory registration` 静默幂等跳过，其他非重复错误通过 `queueMicrotask` 异步重抛（既保留真实报错可观测性，又绝不阻断同批后续插件注册）；
+  - 为 `apply(ctx)` 出口补齐 `try/catch` 兜底；
+  - 软刷新前端前增加优雅收尾（先停 LoAF 采样器、清理本插件样式节点，再延迟 60ms 触发 `location.reload()`，让其他插件的 `beforeunload`/`pagehide` 钩子体面退场）；
+  - 新增 `client.js` 契约单测（`new Function` 经典脚本解析门 + 假 loader 重复注册不抛错验证）。
+
 ## v0.7.1 (2026-11-27)
 - **发现的问题**：在 DSH 桌面端（`dsh-app:`）装有多个第三方插件时，直接点击「软刷新前端界面」可能触发某些不兼容前端重载的第三方插件（例如 `dsh-notify-say`）在 `web-boot` 阶段报 `import failed` 弹窗，容易让不了解情况的用户误以为数据损坏而紧张。
 - **改了什么**：

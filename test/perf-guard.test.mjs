@@ -238,3 +238,25 @@ test("host routes: registerRoutes binds and disposes all 10 endpoints cleanly", 
     await rm(home, { recursive: true, force: true });
   }
 });
+
+test("client bundle: parses as classic script and guards duplicate registration", async () => {
+  const clientSrc = await readFile(new URL("../lib/client.js", import.meta.url), "utf8");
+  // 1. Must parse cleanly as a classic browser script (catches stray TS annotations / syntax bugs)
+  const fn = new Function("window", clientSrc);
+
+  // 2. Calling twice against a loader that throws on duplicate registration must NOT throw
+  const seen = new Set();
+  const fakeWindow = {
+    __ModuleLoader__: {
+      load(entry) {
+        if (seen.has(entry.id)) {
+          throw new Error(`client-modules: duplicate factory registration for "${entry.id}" (bundle executed twice without invalidate?)`);
+        }
+        seen.add(entry.id);
+      }
+    }
+  };
+  fn(fakeWindow);
+  assert.equal(seen.has("dsh-light-guard"), true);
+  assert.doesNotThrow(() => fn(fakeWindow));
+});
