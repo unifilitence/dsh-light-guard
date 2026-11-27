@@ -1,7 +1,7 @@
-# dsh-perf-guard bundle patch
-# Host half (lib/index.js) registers authenticated /api/dsh-perf-guard/* routes.
+# dsh-light-guard bundle patch
+# Host half (lib/index.js) registers authenticated /api/dsh-light-guard/* routes.
 # Client half (lib/client.js) is discovered via package.json -> dsh.client.
 - insert:
-    - id: dsh-perf-guard
-      name: dsh-perf-guard
+    - id: dsh-light-guard
+      name: dsh-light-guard
       config: {}

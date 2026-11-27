@@ -1,8 +1,10 @@
-# dsh-perf-guard
+# dsh-light-guard（轻量护航）
 
-**让 DeepSeek Harness（DSH 0.2.x）不再越用越卡：零后台轮询的性能护航、可逆会话冷归档与按需存储体检插件。**
+> **更名说明**：本插件原名 `dsh-light-guard`，为避免与 DSH 插件市场中已有的同名第三方仓库冲突，自 `v0.6.1` 起正式更名为 **`dsh-light-guard`（轻量护航）**，功能与安全边界完全一致。
 
-*Zero-polling performance guard, reversible session cold-archiver with title search, and on-demand storage doctor for DeepSeek Harness (DSH 0.2.x).*
+**让 DeepSeek Harness（DSH 0.2.x）在重度堆积场景下保持轻盈：零后台轮询的轻量护航、官方 API 可逆会话冷归档与按需存储体检插件。**
+
+*Zero-polling lightweight performance guard, reversible session cold-archiver with title search, and on-demand storage doctor for DeepSeek Harness (DSH 0.2.x).*
 
 ---
 
@@ -15,17 +17,17 @@
 - **零后台负担**：平时 0 定时器、0 rAF 循环、0 报错心跳；装了 `dsh-lag-guard` 时自动避让共存。
 - **实验性功能（默认关闭）**：按需开启 GPU 极简合成（禁用毛玻璃/阴影 + 代码块限高）、激进渲染裁剪（≤40 条 / 4KB 截断）、流式输出帧节流（80–250ms），以及 30 秒按需 LoAF 卡顿脚本归因采样器。
 
-### 一键安装（安装后重启一次 DSH，打开「设置 → 性能护航」）
+### 一键安装（安装后重启一次 DSH，打开「设置 → 轻量护航」）
 
 ```bash
 # Desktop 版（推荐，走 npm）
-dsh plugin --profile desktop add dsh-perf-guard
+dsh plugin --profile desktop add dsh-light-guard
 
 # 或从 GitHub 安装
-dsh plugin --profile desktop add github:unifilitence/dsh-perf-guard
+dsh plugin --profile desktop add github:unifilitence/dsh-light-guard
 
 # Web 版把 desktop 换成 web 即可
-dsh plugin --profile web add dsh-perf-guard
+dsh plugin --profile web add dsh-light-guard
 ```
 
 ### 界面预览（轻量驾驶舱 UI）
@@ -36,18 +38,18 @@ dsh plugin --profile web add dsh-perf-guard
 
 ### 难决定怎么选？4 套一键预设对号入座
 
-装完进 **设置 → 性能护航**，不用纠结一堆参数，按你的日常习惯点一个按钮就行：
+装完进 **设置 → 轻量护航**，不用纠结一堆参数，按你的日常习惯点一个按钮就行：
 
 | 如果你的情况是…… | 推荐预设 | 开启了什么 |
 |---|---|---|
 | **只想稳稳轻一点，不想动任何消息流** | **轻量无感** | 纯 CSS 离屏跳过 + 按需体检 + 手动冷归档（零数据流干预） |
-| **经常跑长任务 / 多轮工具调用 / 装了长上下文插件** | **重度长会话**（默认） | 流瘦身（首页 100 条）+ 挂机减负（暂停动画）+ CSS 离屏 + 长驻提醒 |
-| **用了很久，侧边栏堆了几百上千条旧对话** | **海量历史档** | 侧重 30 天+ 历史会话一键冷归档 + 标题离线搜索 + CSS 离屏 |
+| **经常跑长任务 / 多轮工具调用 / 装了长上下文插件** | **重度长会话**（默认） | 流瘦身（首页 100 条、工具结果裁剪更紧）+ CSS 离屏 + 长驻提醒（归档默认保守 30 天） |
+| **用了很久，侧边栏堆了几百上千条旧对话** | **海量历史档** | 侧重 **14 天+** 历史会话一键冷归档 + 标题离线搜索 + 温和流瘦身 + CSS 离屏 |
 | **装了十几个插件，不知道到底是谁把界面拖卡了** | **插件排查档** | 侧重存储小文件膨胀体检 + 插件前后性能对比快照（自动算 Δ） |
 
 ### 实测效果（隔离 DSH `0.2.2`，打开同一条 23.5 MB 真实长会话）
 
-| 指标 | 纯 `0.2.2` 基线 | + `dsh-perf-guard` (`heavy`) | 变化 |
+| 指标 | 纯 `0.2.2` 基线 | + `dsh-light-guard` (`heavy`) | 变化 |
 |---|---:|---:|---:|
 | 页面 DOM 节点数 | 10,711 | **4,917** | **-54.1%** |
 | CDP 总节点数 | 16,231 | **7,450** | **-54.1%** |
@@ -106,7 +108,7 @@ dsh plugin --profile web add dsh-perf-guard
 ## 卸载与安全红线 / Remove & Safety
 
 ```bash
-dsh plugin --profile desktop remove dsh-perf-guard
+dsh plugin --profile desktop remove dsh-light-guard
 ```
 
 - 已归档会话完整保留在 `$DSH_HOME/sessions-archive/`，绝不随卸载丢失；

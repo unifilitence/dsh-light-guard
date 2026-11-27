@@ -6,6 +6,14 @@
 
 ---
 
+## v0.6.1 (2026-11-27)
+- **发现的问题**：
+  1. DSH 插件市场中已存在早先收录的同名 GitHub 仓库（`TaoLe-si/dsh-perf-guard`），直接沿用 `dsh-perf-guard` 会导致用户在市场搜索时混淆装错；
+  2. 预设参数中 `heavy`（重度长会话）默认归档天数为 `14` 天，而 `archive`（海量历史档）反而是 `30` 天，与直觉相反。
+- **改了什么**：
+  - 正式更名为全网无撞名的 **`dsh-light-guard`（设置页中文名：轻量护航）**，同步迁移 API 路由 `/api/dsh-light-guard/*`、配置目录 `storages/dsh-light-guard/` 与市场清单；
+  - 对调 `heavy`（改为保守 `30` 天）与 `archive`（收紧为 `14` 天）的默认归档天数，让 4 套预设职责更清晰。
+
 ## v0.6.0 (2026-11-27)
 - **发现的问题**：仅移动磁盘上的 `sessions/` 与 `session_projcache/` 后，DSH 官方的 `storages/workspace.json` 里仍保留着已归档会话的 `sessionIds` 和 `archivedSessionIds`，导致侧边栏里依然能看到“幽灵会话”，点进去提示找不到历史会话。
 - **改了什么**：

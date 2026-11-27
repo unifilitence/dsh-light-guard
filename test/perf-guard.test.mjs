@@ -10,7 +10,7 @@ import { isSafeSegment, listArchive, previewArchive, restoreArchive, runArchive,
 import { registerRoutes } from "../lib/index.js";
 
 async function makeTempHome() {
-  const dir = await mkdtemp(path.join(os.tmpdir(), "dsh-perf-guard-test-"));
+  const dir = await mkdtemp(path.join(os.tmpdir(), "dsh-light-guard-test-"));
   await mkdir(path.join(dir, "sessions", "--WS--", "session-old-1"), { recursive: true });
   await mkdir(path.join(dir, "sessions", "--WS--", "session-active-1"), { recursive: true });
   await mkdir(path.join(dir, "storages", "heavy-plugin"), { recursive: true });
@@ -177,27 +177,27 @@ test("host routes: registerRoutes binds and disposes all 10 endpoints cleanly", 
     const dispose = registerRoutes(fakeConn, () => home);
     assert.equal(routes.size, 10);
 
-    const cfgRoute = routes.get("/api/dsh-perf-guard/config");
-    const r1 = await cfgRoute.fetch(new Request("http://127.0.0.1/api/dsh-perf-guard/config", { method: "GET" }));
+    const cfgRoute = routes.get("/api/dsh-light-guard/config");
+    const r1 = await cfgRoute.fetch(new Request("http://127.0.0.1/api/dsh-light-guard/config", { method: "GET" }));
     const j1 = await r1.json();
     assert.equal(j1.ok, true);
     assert.equal(j1.value.preset, "heavy");
 
-    const scanRoute = routes.get("/api/dsh-perf-guard/scan");
-    const r2 = await scanRoute.fetch(new Request("http://127.0.0.1/api/dsh-perf-guard/scan", { method: "GET" }));
+    const scanRoute = routes.get("/api/dsh-light-guard/scan");
+    const r2 = await scanRoute.fetch(new Request("http://127.0.0.1/api/dsh-light-guard/scan", { method: "GET" }));
     const j2 = await r2.json();
     assert.equal(j2.ok, true);
     assert.equal(j2.report.sessions.totalCount, 2);
 
     // Negative path: open-folder rejects path traversal outside $DSH_HOME
-    const openRoute = routes.get("/api/dsh-perf-guard/open-folder");
-    const badOpen = await openRoute.fetch(new Request("http://127.0.0.1/api/dsh-perf-guard/open-folder", {
+    const openRoute = routes.get("/api/dsh-light-guard/open-folder");
+    const badOpen = await openRoute.fetch(new Request("http://127.0.0.1/api/dsh-light-guard/open-folder", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ relPath: "../../Windows", dryRun: true })
     }));
     assert.equal(badOpen.status, 400);
-    const okOpen = await openRoute.fetch(new Request("http://127.0.0.1/api/dsh-perf-guard/open-folder", {
+    const okOpen = await openRoute.fetch(new Request("http://127.0.0.1/api/dsh-light-guard/open-folder", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ relPath: "storages/heavy-plugin", dryRun: true })
@@ -205,8 +205,8 @@ test("host routes: registerRoutes binds and disposes all 10 endpoints cleanly", 
     assert.equal(okOpen.status, 200);
 
     // Snapshot recorder
-    const snapRoute = routes.get("/api/dsh-perf-guard/snapshot");
-    const rSnap = await snapRoute.fetch(new Request("http://127.0.0.1/api/dsh-perf-guard/snapshot", {
+    const snapRoute = routes.get("/api/dsh-light-guard/snapshot");
+    const rSnap = await snapRoute.fetch(new Request("http://127.0.0.1/api/dsh-light-guard/snapshot", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ label: "基线快照", domNodes: 1200, longTasks: 2, maxLtMs: 120 })
@@ -217,8 +217,8 @@ test("host routes: registerRoutes binds and disposes all 10 endpoints cleanly", 
     assert.equal(jSnap.snapshots[0].label, "基线快照");
 
     // Experimental hot-reload endpoint
-    const reloadRoute = routes.get("/api/dsh-perf-guard/reload");
-    const rReload = await reloadRoute.fetch(new Request("http://127.0.0.1/api/dsh-perf-guard/reload", {
+    const reloadRoute = routes.get("/api/dsh-light-guard/reload");
+    const rReload = await reloadRoute.fetch(new Request("http://127.0.0.1/api/dsh-light-guard/reload", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: "{}"

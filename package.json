@@ -1,6 +1,6 @@
 {
-  "name": "dsh-perf-guard",
-  "version": "0.6.0",
+  "name": "dsh-light-guard",
+  "version": "0.6.1",
   "author": "unifilitence",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
@@ -58,11 +58,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/unifilitence/dsh-perf-guard.git"
+    "url": "git+https://github.com/unifilitence/dsh-light-guard.git"
   },
-  "homepage": "https://github.com/unifilitence/dsh-perf-guard#readme",
+  "homepage": "https://github.com/unifilitence/dsh-light-guard#readme",
   "bugs": {
-    "url": "https://github.com/unifilitence/dsh-perf-guard/issues"
+    "url": "https://github.com/unifilitence/dsh-light-guard/issues"
   },
   "license": "MIT",
   "peerDependencies": {
