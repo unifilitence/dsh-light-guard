@@ -36,9 +36,12 @@ async function makeTempHome() {
 test("config-store: sanitizeConfig clamps invariants and persists atomically", async () => {
   const home = await makeTempHome();
   try {
-    const clean = sanitizeConfig({ preset: "heavy", maxMessages: 30, minMessages: 100 });
+    const clean = sanitizeConfig({ preset: "heavy", maxMessages: 30, minMessages: 100, expGpuLiteEnabled: true, expStreamCoalesceMs: 9999 });
     assert.equal(clean.maxMessages, 30);
     assert.equal(clean.minMessages, 30, "minMessages must never exceed maxMessages");
+    assert.equal(clean.expGpuLiteEnabled, true);
+    assert.equal(clean.expUltraLeanEnabled, false);
+    assert.equal(clean.expStreamCoalesceMs, 500, "expStreamCoalesceMs must clamp to <= 500");
 
     const light = applyPreset(clean, "light");
     assert.equal(light.preset, "light");
