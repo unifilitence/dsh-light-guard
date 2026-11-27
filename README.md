@@ -126,8 +126,10 @@ dsh plugin --profile desktop remove dsh-perf-guard
 
 ---
 
-## 开发、测试与致谢 / Development & Credits
+## 开发、测试、更新日志与致谢 / Development, Changelog & Credits
 
+- **完整更新日志**（记录每版「发现了什么问题 → 改了什么」）：见 [CHANGELOG.md](./CHANGELOG.md)
+- **单元测试**：
 ```bash
 npm test
 ```

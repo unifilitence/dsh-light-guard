@@ -23,6 +23,7 @@
     "cordis.patch.yml",
     "icon.svg",
     "market/",
+    "CHANGELOG.md",
     "README.md",
     "LICENSE"
   ],
