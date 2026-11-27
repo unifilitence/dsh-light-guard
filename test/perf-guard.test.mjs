@@ -130,7 +130,7 @@ test("archiver: path guard, active-session guard, reversible archive and restore
   }
 });
 
-test("host routes: registerRoutes binds and disposes all 8 endpoints cleanly", async () => {
+test("host routes: registerRoutes binds and disposes all 9 endpoints cleanly", async () => {
   const home = await makeTempHome();
   try {
     const routes = new Map();
@@ -143,7 +143,7 @@ test("host routes: registerRoutes binds and disposes all 8 endpoints cleanly", a
       }
     };
     const dispose = registerRoutes(fakeConn, () => home);
-    assert.equal(routes.size, 8);
+    assert.equal(routes.size, 9);
 
     const cfgRoute = routes.get("/api/dsh-perf-guard/config");
     const r1 = await cfgRoute.fetch(new Request("http://127.0.0.1/api/dsh-perf-guard/config", { method: "GET" }));
@@ -183,6 +183,18 @@ test("host routes: registerRoutes binds and disposes all 8 endpoints cleanly", a
     assert.equal(jSnap.ok, true);
     assert.equal(jSnap.snapshots.length, 1);
     assert.equal(jSnap.snapshots[0].label, "基线快照");
+
+    // Experimental hot-reload endpoint
+    const reloadRoute = routes.get("/api/dsh-perf-guard/reload");
+    const rReload = await reloadRoute.fetch(new Request("http://127.0.0.1/api/dsh-perf-guard/reload", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}"
+    }));
+    const jReload = await rReload.json();
+    assert.equal(jReload.ok, true);
+    assert.equal(jReload.reloadCount, 1);
+    assert.ok(typeof jReload.hostVersion === "string" && jReload.hostVersion.length > 0);
 
     dispose();
     assert.equal(routes.size, 0, "all registered routes must be cleaned up on dispose");
