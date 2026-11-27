@@ -6,7 +6,7 @@ import path from "node:path";
 
 import { PRESETS, applyPreset, readConfig, sanitizeConfig, writeConfig } from "../lib/config-store.js";
 import { runFullScan, scanSessions, scanStorages } from "../lib/scanner.js";
-import { isSafeSegment, listArchive, previewArchive, restoreArchive, runArchive } from "../lib/archiver.js";
+import { isSafeSegment, listArchive, previewArchive, restoreArchive, runArchive, syncArchiveCache } from "../lib/archiver.js";
 import { registerRoutes } from "../lib/index.js";
 
 async function makeTempHome() {
@@ -46,13 +46,18 @@ test("config-store: sanitizeConfig clamps invariants and persists atomically", a
     const light = applyPreset(clean, "light");
     assert.equal(light.preset, "light");
     assert.equal(light.streamGuardEnabled, false);
+    assert.equal(light.expGpuLiteEnabled, true, "switching presets must preserve user experimental flags");
 
     const saved = await writeConfig(home, light);
     assert.equal(saved.ok, true);
+    // Partial write must preserve existing flags
+    await writeConfig(home, { maxMessages: 80 });
     const loaded = await readConfig(home);
     assert.equal(loaded.ok, true);
     assert.equal(loaded.exists, true);
     assert.equal(loaded.value.preset, "light");
+    assert.equal(loaded.value.maxMessages, 80);
+    assert.equal(loaded.value.expGpuLiteEnabled, true, "partial config write must not wipe existing user settings");
     assert.equal(PRESETS.heavy.streamGuardEnabled, true);
   } finally {
     await rm(home, { recursive: true, force: true });
@@ -103,13 +108,16 @@ test("archiver: path guard, active-session guard, reversible archive and restore
     assert.equal(preview.items[0].sessionId, "session-old-1");
     assert.equal(preview.skipped.active, 1);
 
-    // Execute archive
+    // Execute archive (paired move of session dir + session_projcache json)
     const archived = await runArchive(home, preview.items);
     assert.equal(archived.ok, true);
     assert.equal(archived.movedCount, 1);
     await assert.rejects(() => stat(path.join(home, "sessions", "--WS--", "session-old-1")));
+    await assert.rejects(() => stat(path.join(home, "storages", "session_projcache", "sessions", "session-old-1.json")));
     const stArch = await stat(path.join(home, "sessions-archive", "--WS--", "session-old-1"));
     assert.equal(stArch.isDirectory(), true);
+    const stProjArch = await stat(path.join(home, "sessions-archive", "_projcache", "session-old-1.json"));
+    assert.equal(stProjArch.isFile(), true);
 
     // Search archive offline by human-readable title
     const listed = await listArchive(home, "旧项目排查");
@@ -117,20 +125,26 @@ test("archiver: path guard, active-session guard, reversible archive and restore
     assert.equal(listed.entries[0].sessionId, "session-old-1");
     assert.equal(listed.entries[0].title, "旧项目排查对话");
 
-    // Restore back to sessions/
+    // Restore back to sessions/ + projcache
     const restored = await restoreArchive(home, [{ workspace: "--WS--", sessionId: "session-old-1" }]);
     assert.equal(restored.ok, true);
     assert.equal(restored.restoredCount, 1);
     const stBack = await stat(path.join(home, "sessions", "--WS--", "session-old-1"));
     assert.equal(stBack.isDirectory(), true);
+    const stProjBack = await stat(path.join(home, "storages", "session_projcache", "sessions", "session-old-1.json"));
+    assert.equal(stProjBack.isFile(), true);
     const listedAfter = await listArchive(home, "");
     assert.equal(listedAfter.totalCount, 0);
+
+    // syncArchiveCache should cleanly handle already-synced index
+    const syncRes = await syncArchiveCache(home);
+    assert.equal(syncRes.ok, true);
   } finally {
     await rm(home, { recursive: true, force: true });
   }
 });
 
-test("host routes: registerRoutes binds and disposes all 9 endpoints cleanly", async () => {
+test("host routes: registerRoutes binds and disposes all 10 endpoints cleanly", async () => {
   const home = await makeTempHome();
   try {
     const routes = new Map();
@@ -143,7 +157,7 @@ test("host routes: registerRoutes binds and disposes all 9 endpoints cleanly", a
       }
     };
     const dispose = registerRoutes(fakeConn, () => home);
-    assert.equal(routes.size, 9);
+    assert.equal(routes.size, 10);
 
     const cfgRoute = routes.get("/api/dsh-perf-guard/config");
     const r1 = await cfgRoute.fetch(new Request("http://127.0.0.1/api/dsh-perf-guard/config", { method: "GET" }));
