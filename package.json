@@ -1,6 +1,6 @@
 {
   "name": "dsh-perf-guard",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "author": "unifilitence",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
