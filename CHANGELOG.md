@@ -6,6 +6,12 @@
 
 ---
 
+## v0.7.6 (2026-11-28)
+- **发现的问题**：开启实验性功能「流式输出帧节流（`expStreamCoalesceMs`）」后，在 Windows 桌面端切换去其他窗口（未最小化，`document.hidden` 仍为 `false`）再切回 DSH 时，已完成的会话偶尔会停留在“仍在工作中”的显示状态，直到切换会话再切回才恢复。核查 DSH 源码 `SessionEventStream.follow` 后定位到根因：此前节流错误地加在了 `frame.type === "entry"`（包含工具完成/回合结束等关键状态帧）上，且未检测窗口失焦（`document.hasFocus()`）。
+- **改了什么**：
+  - 参照业界「控制帧直通（Control-Frame Bypass）+ 聚焦感知（Focus-Aware）」模式重构流节流：`frame.type === "entry"` 与 `opened` 永远 **0ms 零延迟直通**，绝不阻塞状态机完成态；
+  - 仅在窗口处于前台聚焦（`!document.hidden && document.hasFocus()`）时，对真正高频的 `frame.type === "notification"`（`assistant-stream` 打字机流帧）生效，既真正命中公式/长代码流式重排痛点，又彻底消除切回窗口卡在工作中的显示异常。
+
 ## v0.7.5 (2026-11-28)
 - **发现的问题**：开启实验性功能「流式输出帧节流（`expStreamCoalesceMs`）」后，当用户把 DSH 切到后台窗口时，Chromium 会把后台页面的 `setTimeout` 节流拉长到 ≥ 1 秒/次，导致流事件在前端队列里严重积压；切回 DSH 后，早已在后端完成的会话仍会慢半拍逐条补放动画。
 - **改了什么**：
